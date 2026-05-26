@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --font-sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+
+@layer base {
+	html, body, #root { height: 100%; }
+	body {
+		@apply antialiased text-neutral-100 font-sans;
+		font-family: var(--font-sans);
+		background: linear-gradient(to bottom, #070a12, #0b1020 55%, #070a12);
+	}
+	a { color: inherit; }
+}
+
+@layer components {
+	.container-center { @apply container mx-auto; }
+
+	/* Glass card used across the app */
+	.card { @apply rounded-2xl border border-border bg-white/5 p-4 shadow-[0_12px_30px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl; }
+	.panel { @apply rounded-2xl border border-border bg-black/25 p-4 shadow-[0_12px_30px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl; }
+	.surface { @apply rounded-2xl border border-border bg-white/5 backdrop-blur-xl; }
+	.stack { @apply grid gap-4; }
+	.grid-2 { @apply grid gap-4 md:grid-cols-2; }
+	.auth-shell { @apply min-h-screen flex items-center justify-center px-4 py-8; }
+	.auth-card { @apply w-full max-w-md; }
+	.auth-heading { @apply mb-6 text-center; }
+	.auth-title { @apply text-3xl sm:text-4xl font-semibold tracking-wide; }
+	.auth-copy { @apply mt-1 text-sm text-neutral-400; }
+	.auth-links { @apply mt-4 flex items-center justify-center text-sm text-neutral-300; }
+	.footer-note { @apply text-xs text-neutral-400; }
+
+	/* Topbar / navbar */
+	.topbar { @apply sticky top-0 z-20 border-b border-border bg-black/20 backdrop-blur-xl; }
+	.topbar-inner { @apply container mx-auto px-4 flex items-center justify-between h-16; }
+	.topbar-brand { @apply flex items-center gap-3 font-semibold tracking-wide text-neutral-100; }
+	.topbar-search { @apply hidden md:block w-full max-w-xl; }
+	.topbar-actions { @apply flex items-center gap-3; }
+
+	/* Profile pill */
+	.profile-pill { @apply flex items-center gap-3; }
+	.avatar { @apply w-9 h-9 rounded-full bg-white/5 border border-border grid place-items-center text-neutral-100 font-medium; }
+
+	/* Buttons */
+	.btn-minimal { @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm border transition; }
+	.btn-neon { @apply border-transparent bg-gradient-to-r from-neon-from via-indigo-500 to-neon-to text-white shadow-[0_10px_30px_-18px_rgba(99,102,241,0.8)]; }
+	.btn-ghost { @apply border-border bg-transparent text-neutral-200 hover:bg-white/5 hover:border-white/15; }
+}
