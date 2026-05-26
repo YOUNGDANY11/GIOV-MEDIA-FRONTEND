@@ -1,6 +1,6 @@
 import { tokenStorage } from './storage'
 
-const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://g10v-media-production-3645.up.railway.app/api'
 export const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '')
 export const API_ORIGIN = new URL(API_BASE_URL).origin
 
