@@ -30,7 +30,7 @@ export function MediaListView() {
               return (
                 <button
                   type="button"
-                  onClick={() => setSelected({ url, name: `${row?.user_name ?? ''} — ${row?.week_name ?? ''}`.trim() })}
+                  onClick={() => setSelected({ url, name: `${row?.user_name ?? ''} ${row?.user_lastname ?? ''} — ${row?.week_name ?? ''}`.trim() })}
                   className="inline-flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 text-sm font-medium"
                 >
                   ▶ Ver video
