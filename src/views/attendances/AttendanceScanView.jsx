@@ -9,6 +9,7 @@ import { Input } from '../../components/ui/Input'
 import { attendanceController } from '../../controllers/attendanceController'
 import { trainingController } from '../../controllers/trainingController'
 import { isAthlete } from '../../utils/roles'
+import { formatBogotaDateTime, parseBogotaDateTime } from '../../utils/bogotaTime'
 
 const WINDOW_MINUTES = Number(import.meta.env.VITE_ATTENDANCE_WINDOW_MINUTES || 40)
 
@@ -16,12 +17,7 @@ const toDate = (value) => String(value ?? '').slice(0, 10)
 const toTime = (value) => String(value ?? '').slice(0, 5)
 
 const parseStart = (training) => {
-  const date = toDate(training?.date)
-  const time = String(training?.time ?? '00:00:00')
-  if (!date) return null
-  const normalized = time.length === 5 ? `${time}:00` : time
-  const dt = new Date(`${date}T${normalized}`)
-  return Number.isNaN(dt.getTime()) ? null : dt
+  return parseBogotaDateTime(training?.date, training?.time)
 }
 
 export function AttendanceScanView() {
@@ -34,6 +30,7 @@ export function AttendanceScanView() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [training, setTraining] = useState(null)
+  const [now, setNow] = useState(() => new Date())
 
   const search = useMemo(() => new URLSearchParams(location.search), [location.search])
   const trainingId = useMemo(() => Number(search.get('trainingId') || 0), [search])
@@ -41,8 +38,15 @@ export function AttendanceScanView() {
 
   const start = useMemo(() => parseStart(training), [training])
   const end = useMemo(() => (start ? new Date(start.getTime() + WINDOW_MINUTES * 60_000) : null), [start])
-  const now = useMemo(() => new Date(), [trainingId, isAuthenticated])
   const isWithinWindow = Boolean(start && end && now >= start && now <= end)
+
+  useEffect(() => {
+    if (!isAuthenticated) return undefined
+
+    setNow(new Date())
+    const timer = window.setInterval(() => setNow(new Date()), 30_000)
+    return () => window.clearInterval(timer)
+  }, [isAuthenticated, trainingId])
 
   useEffect(() => {
     if (authLoading) return
@@ -149,7 +153,7 @@ export function AttendanceScanView() {
 
             {start && end ? (
               <div className="footer-note">
-                Ventana: {start.toLocaleString('es-CO')} — {end.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                Ventana: {formatBogotaDateTime(start, { dateStyle: 'medium', timeStyle: 'short' })} — {formatBogotaDateTime(end, { hour: '2-digit', minute: '2-digit' })}
               </div>
             ) : null}
           </div>

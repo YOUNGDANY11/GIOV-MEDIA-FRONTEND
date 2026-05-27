@@ -8,28 +8,32 @@ import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { icons } from '../../components/ui/icons'
+import { formatBogotaDateTime, parseBogotaDateTime } from '../../utils/bogotaTime'
 
 const toDate = (value) => String(value ?? '').slice(0, 10)
 const toTime = (value) => String(value ?? '').slice(0, 5)
 
 const parseStart = (training) => {
-  const date = toDate(training?.date)
-  const time = String(training?.time ?? '00:00:00')
-  if (!date) return null
-  const normalizedTime = time.length === 5 ? `${time}:00` : time
-  const dt = new Date(`${date}T${normalizedTime}`)
-  return Number.isNaN(dt.getTime()) ? null : dt
+  return parseBogotaDateTime(training?.date, training?.time)
 }
 
 export function AttendanceQrModal({ open, training, onClose, windowMinutes = 40 }) {
   const navigate = useNavigate()
   const [tab, setTab] = useState('qr')
+  const [now, setNow] = useState(() => new Date())
 
   const start = useMemo(() => parseStart(training), [training])
   const end = useMemo(() => (start ? new Date(start.getTime() + windowMinutes * 60_000) : null), [start, windowMinutes])
-  const now = useMemo(() => new Date(), [open, training?.id_training])
 
   const isWithinWindow = Boolean(start && end && now >= start && now <= end)
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    setNow(new Date())
+    const timer = window.setInterval(() => setNow(new Date()), 30_000)
+    return () => window.clearInterval(timer)
+  }, [open, training?.id_training])
 
   const qrUrl = useMemo(() => {
     if (!training?.id_training) return ''
@@ -40,7 +44,7 @@ export function AttendanceQrModal({ open, training, onClose, windowMinutes = 40 
   useEffect(() => {
     if (!open) return
     setTab(isWithinWindow ? 'qr' : 'info')
-  }, [open, isWithinWindow, training?.id_training])
+  }, [open, isWithinWindow])
 
   return (
     <Modal
@@ -113,7 +117,7 @@ export function AttendanceQrModal({ open, training, onClose, windowMinutes = 40 
 
               {start && end ? (
                 <div className="text-neutral-400 mt-3">
-                  Ventana: {start.toLocaleString('es-CO')} — {end.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                  Ventana: {formatBogotaDateTime(start, { dateStyle: 'medium', timeStyle: 'short' })} — {formatBogotaDateTime(end, { hour: '2-digit', minute: '2-digit' })}
                 </div>
               ) : null}
               </div>
