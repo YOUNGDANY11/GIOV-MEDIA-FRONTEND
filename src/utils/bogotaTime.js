@@ -1,6 +1,7 @@
-export const BOGOTA_TIME_ZONE = 'America/Bogota'
+export const BOGOTA_TIME_ZONE = import.meta.env.VITE_ATTENDANCE_TIME_ZONE || 'America/Bogota'
 
-const BOGOTA_UTC_OFFSET_HOURS = 5
+const rawOffsetHours = Number(import.meta.env.VITE_ATTENDANCE_UTC_OFFSET_HOURS || 5)
+const BOGOTA_UTC_OFFSET_HOURS = Number.isFinite(rawOffsetHours) ? rawOffsetHours : 5
 
 const normalizeTime = (value) => {
   const raw = String(value ?? '').trim()
