@@ -66,7 +66,6 @@ export function RegisterView() {
             <Input label="Contraseña" type="password" value={form.password} onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))} required />
             <Select label="Rol" value={form.id_role} onChange={(e) => setForm((prev) => ({ ...prev, id_role: e.target.value }))}>
               <option value="1">Administrador</option>
-              <option value="2">Deportista</option>
             </Select>
             <Button type="submit" className="w-full" disabled={submitting}>{submitting ? 'Registrando...' : 'Registrarme'}</Button>
           </form>
