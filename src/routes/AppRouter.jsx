@@ -5,6 +5,7 @@ import { ProtectedRoute } from '../components/layout/ProtectedRoute'
 import { RoleRoute } from '../components/layout/RoleRoute'
 import { LoginView } from '../views/LoginView'
 import { RegisterView } from '../views/RegisterView'
+import { ForgotPasswordView } from '../views/ForgotPasswordView'
 import { DashboardView } from '../views/DashboardView'
 import { MeView } from '../views/MeView'
 import { UsersListView } from '../views/users/UsersListView'
@@ -28,6 +29,7 @@ export function AppRouter() {
     <Routes>
       <Route path="/login" element={<LoginView />} />
       <Route path="/register" element={<RegisterView />} />
+      <Route path="/forgot-password" element={<ForgotPasswordView />} />
       <Route path="/attendance/scan" element={<AttendanceScanView />} />
 
       <Route

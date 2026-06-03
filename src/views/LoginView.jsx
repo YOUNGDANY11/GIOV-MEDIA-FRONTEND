@@ -57,8 +57,12 @@ export function LoginView() {
             <Button type="submit" className="w-full" disabled={submitting}>{submitting ? 'Ingresando...' : 'Ingresar'}</Button>
           </form>
 
-          <div className="auth-links">
-            <Link className="underline underline-offset-4 hover:text-white" to="/register">Crear cuenta</Link>
+          <div className="flex flex-col items-center gap-2 mt-4 text-sm text-neutral-400">
+            <Link className="underline underline-offset-4 hover:text-white text-neutral-400" to="/forgot-password">¿Olvidaste tu contraseña?</Link>
+            <div className="flex items-center gap-1">
+              <span>¿No tienes una cuenta?</span>
+              <Link className="underline underline-offset-4 hover:text-white text-neutral-300" to="/register">Crea una</Link>
+            </div>
           </div>
           </div>
         </Card>
