@@ -7,7 +7,6 @@ export function MyAttendancesView() {
       title="Mis asistencias"
       subtitle="Historial de asistencias del deportista autenticado."
       load={() => attendanceController.getMine()}
-      createPath="/my-attendances/new"
       getRowKey={(row) => row.id_attendance}
       columns={[
         { key: 'id_attendance', label: 'ID' },
