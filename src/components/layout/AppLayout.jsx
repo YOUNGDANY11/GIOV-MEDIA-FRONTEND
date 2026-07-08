@@ -3,9 +3,9 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faArrowUpFromBracket,
+  faBars,
   faCalendarDays,
   faChevronDown,
-  faCircleCheck,
   faClipboardCheck,
   faClipboardList,
   faDumbbell,
@@ -17,13 +17,12 @@ import {
   faUser,
   faUsers,
   faVideo,
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons'
 
 import logo from '../../assets/logo.png'
 import { useAuth } from '../../context/AuthContext'
 import { isAdmin, isAthlete } from '../../utils/roles'
-
-const navItem = (to, label, icon) => ({ to, label, icon })
 
 const navTriggerClass = 'px-3 py-2 rounded-xl text-sm border transition border-white/0 text-neutral-200 hover:bg-white/5 hover:border-white/10 inline-flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/45'
 const topLinkClass = ({ isActive }) => `${navTriggerClass} ${isActive ? 'bg-white/10 text-white border-white/15 shadow-[0_10px_30px_-20px_rgba(99,102,241,0.7)]' : ''}`
@@ -76,33 +75,17 @@ export function AppLayout() {
   const location = useLocation()
   const headerRef = useRef(null)
   const [openMenu, setOpenMenu] = useState(null)
+  const [mobileSection, setMobileSection] = useState(null)
 
   const role = user?.id_role
 
-  const closeMenus = () => setOpenMenu(null)
+  const closeMenus = () => {
+    setOpenMenu(null)
+    setMobileSection(null)
+  }
   const toggleMenu = (id) => setOpenMenu((prev) => (prev === id ? null : id))
-
-  // Mobile nav links (Dashboard is always shown separately as the first item)
-  const links = [
-    navItem('/me', 'Mi perfil', faUser),
-    navItem('/trainings', 'Entrenamientos', faDumbbell),
-  ]
-
-  if (isAdmin(role)) {
-    links.push(navItem('/agenda',            'Agenda QR',    faQrcode))
-    links.push(navItem('/attendances/list',  'Asistencias',  faClipboardList))
-    links.push(navItem('/users',             'Usuarios',     faUsers))
-    links.push(navItem('/weeks',             'Semanas',      faCalendarDays))
-    links.push(navItem('/media',             'Media',        faVideo))
-  }
-
-  if (isAthlete(role)) {
-    links.push(navItem('/attendance/scan',    'Escanear QR',        faQrcode))
-    links.push(navItem('/my-attendances',     'Mis asistencias',    faClipboardCheck))
-    links.push(navItem('/my-attendances/new', 'Registrar',          faCircleCheck))
-    links.push(navItem('/media/submit',       'Subir video',        faArrowUpFromBracket))
-    links.push(navItem('/media/mine',         'Mis videos',         faFilm))
-  }
+  const toggleMobileSection = (id) => setMobileSection((prev) => (prev === id ? null : id))
+  const mobileMenuOpen = openMenu === 'mobile'
 
   useEffect(() => {
     if (!openMenu) return undefined
@@ -164,7 +147,6 @@ export function AppLayout() {
               <DropdownMenu id="athlete" label="Mi actividad" icon={faClipboardCheck} open={openMenu === 'athlete'} onToggle={() => toggleMenu('athlete')} onClose={closeMenus} align="right">
                 <MenuLink to="/attendance/scan"    icon={faQrcode}>Escanear QR</MenuLink>
                 <MenuLink to="/my-attendances"     icon={faClipboardCheck}>Mis asistencias</MenuLink>
-                <MenuLink to="/my-attendances/new" icon={faCircleCheck}>Registrar asistencia</MenuLink>
                 <MenuLink to="/media/submit"       icon={faArrowUpFromBracket}>Subir video</MenuLink>
                 <MenuLink to="/media/mine"         icon={faFilm}>Mis videos</MenuLink>
               </DropdownMenu>
@@ -193,37 +175,104 @@ export function AppLayout() {
               </button>
             ) : null}
           </div>
+
+          {/* Mobile menu toggle */}
+          <button
+            type="button"
+            className={`lg:hidden inline-flex h-11 w-11 items-center justify-center rounded-xl border transition focus:outline-none focus:ring-2 focus:ring-indigo-500/45 ${mobileMenuOpen ? 'border-white/15 bg-white/10 text-white' : 'border-white/10 bg-black/20 text-neutral-200 hover:bg-white/5'}`}
+            aria-haspopup="menu"
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+            data-menu-root="mobile"
+            onClick={() => { toggleMenu('mobile'); setMobileSection(null) }}
+          >
+            <FontAwesomeIcon icon={mobileMenuOpen ? faXmark : faBars} />
+          </button>
         </div>
 
         {/* Mobile nav */}
-        <div className="border-t border-white/10 lg:hidden">
-          <nav className="mx-auto max-w-6xl px-4 py-2 flex flex-wrap gap-2">
-            <NavLink className={topLinkClass} to="/dashboard">
-              <FontAwesomeIcon icon={faHouse} className="opacity-80" />
-              <span>Dashboard</span>
-            </NavLink>
+        {mobileMenuOpen ? (
+          <div className="border-t border-white/10 lg:hidden" data-menu-root="mobile">
+            <nav
+              className="mx-auto grid max-w-6xl gap-1 px-4 py-3"
+              onClick={(e) => {
+                const target = e.target
+                if (target instanceof Element && target.closest('a, button[data-mobile-action]')) closeMenus()
+              }}
+            >
+              <MenuLink to="/dashboard" icon={faHouse}>Dashboard</MenuLink>
 
-            {links.slice(0, 3).map((item) => (
-              <NavLink key={item.to} className={topLinkClass} to={item.to}>
-                <FontAwesomeIcon icon={item.icon} className="opacity-80" />
-                <span>{item.label}</span>
-              </NavLink>
-            ))}
+              {isAdmin(role) ? (
+                <div className="mt-1">
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm text-neutral-200 transition hover:bg-white/5"
+                    aria-expanded={mobileSection === 'management'}
+                    onClick={() => toggleMobileSection('management')}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <FontAwesomeIcon icon={faUsers} className="opacity-80" />
+                      <span>Gestión</span>
+                    </span>
+                    <FontAwesomeIcon icon={faChevronDown} className={`text-[0.85em] opacity-70 transition ${mobileSection === 'management' ? 'rotate-180' : ''}`} />
+                  </button>
 
-            {/* Logout móvil */}
-            {user ? (
-              <button
-                type="button"
-                className={`${navTriggerClass} hover:text-red-400 hover:border-red-400/20`}
-                onClick={logout}
-                title="Cerrar sesión"
-              >
-                <FontAwesomeIcon icon={faRightFromBracket} className="opacity-80" />
-                <span>Salir</span>
-              </button>
-            ) : null}
-          </nav>
-        </div>
+                  {mobileSection === 'management' ? (
+                    <div className="grid gap-1 pl-3 mt-1">
+                      <MenuLink to="/users"            icon={faUsers}>Usuarios</MenuLink>
+                      <MenuLink to="/trainings"        icon={faDumbbell}>Entrenamientos</MenuLink>
+                      <MenuLink to="/weeks"            icon={faCalendarDays}>Semanas</MenuLink>
+                      <MenuLink to="/agenda"           icon={faQrcode}>Agenda QR</MenuLink>
+                      <MenuLink to="/attendances/list" icon={faClipboardList}>Asistencias</MenuLink>
+                      <MenuLink to="/media"            icon={faVideo}>Media</MenuLink>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {isAthlete(role) ? (
+                <div className="mt-1">
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm text-neutral-200 transition hover:bg-white/5"
+                    aria-expanded={mobileSection === 'athlete'}
+                    onClick={() => toggleMobileSection('athlete')}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <FontAwesomeIcon icon={faClipboardCheck} className="opacity-80" />
+                      <span>Mi actividad</span>
+                    </span>
+                    <FontAwesomeIcon icon={faChevronDown} className={`text-[0.85em] opacity-70 transition ${mobileSection === 'athlete' ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {mobileSection === 'athlete' ? (
+                    <div className="grid gap-1 pl-3 mt-1">
+                      <MenuLink to="/attendance/scan"    icon={faQrcode}>Escanear QR</MenuLink>
+                      <MenuLink to="/my-attendances"     icon={faClipboardCheck}>Mis asistencias</MenuLink>
+                      <MenuLink to="/media/submit"       icon={faArrowUpFromBracket}>Subir video</MenuLink>
+                      <MenuLink to="/media/mine"         icon={faFilm}>Mis videos</MenuLink>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {user ? (
+                <div className="mt-2 border-t border-white/10 pt-2">
+                  <MenuLink to="/me" icon={faUser}>{user.name} {user.lastname}</MenuLink>
+                  <button
+                    type="button"
+                    data-mobile-action="logout"
+                    className="mt-1 flex w-full items-center gap-2 rounded-xl border border-transparent px-3 py-2 text-left text-sm text-neutral-200 transition hover:border-red-400/20 hover:bg-white/5 hover:text-red-400"
+                    onClick={logout}
+                  >
+                    <FontAwesomeIcon icon={faRightFromBracket} className="opacity-80" />
+                    <span>Salir</span>
+                  </button>
+                </div>
+              ) : null}
+            </nav>
+          </div>
+        ) : null}
       </header>
 
       <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-6">

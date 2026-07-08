@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../context/AuthContext'
@@ -10,6 +10,7 @@ import { attendanceController } from '../../controllers/attendanceController'
 import { trainingController } from '../../controllers/trainingController'
 import { isAthlete } from '../../utils/roles'
 import { formatBogotaDateTime, parseBogotaDateTime } from '../../utils/bogotaTime'
+import { QrCameraScanner } from './QrCameraScanner'
 
 const WINDOW_MINUTES = Number(import.meta.env.VITE_ATTENDANCE_WINDOW_MINUTES || 40)
 
@@ -29,8 +30,10 @@ export function AttendanceScanView() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [scanError, setScanError] = useState('')
   const [training, setTraining] = useState(null)
   const [now, setNow] = useState(() => new Date())
+  const scanHandledRef = useRef(false)
 
   const search = useMemo(() => new URLSearchParams(location.search), [location.search])
   const trainingId = useMemo(() => Number(search.get('trainingId') || 0), [search])
@@ -56,24 +59,13 @@ export function AttendanceScanView() {
   }, [authLoading, isAuthenticated, navigate])
 
   const boot = useCallback(async () => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated || !trainingId) return
 
     setError('')
     setSuccess('')
     setLoading(true)
 
     try {
-      if (!isAthlete(user?.id_role)) {
-        setError('Esta página solo está disponible para deportistas.')
-        setTraining(null)
-        return
-      }
-
-      if (!trainingId) {
-        setError('QR inválido: falta trainingId.')
-        return
-      }
-
       const currentTraining = await trainingController.getById(trainingId)
       if (!currentTraining) {
         setError('No se encontró el entrenamiento asociado al QR.')
@@ -87,13 +79,57 @@ export function AttendanceScanView() {
     } finally {
       setLoading(false)
     }
-  }, [isAuthenticated, trainingId, user?.id_role])
+  }, [isAuthenticated, trainingId])
 
   useEffect(() => {
     if (authLoading) return
     if (!isAuthenticated) return
+
+    if (!isAthlete(user?.id_role)) {
+      setError('Esta página solo está disponible para deportistas.')
+      setLoading(false)
+      return
+    }
+
+    if (!trainingId) {
+      setLoading(false)
+      return
+    }
+
     boot()
-  }, [authLoading, isAuthenticated, boot])
+  }, [authLoading, isAuthenticated, trainingId, user?.id_role, boot])
+
+  const handleDecode = useCallback((text) => {
+    if (scanHandledRef.current) return
+
+    let parsedTrainingId = ''
+    let parsedStatus = 'Verificado'
+
+    try {
+      const url = new URL(text, window.location.origin)
+      parsedTrainingId = url.searchParams.get('trainingId') || ''
+      parsedStatus = url.searchParams.get('status') || 'Verificado'
+    } catch {
+      // no era una URL válida
+    }
+
+    if (!parsedTrainingId || !Number(parsedTrainingId)) {
+      setScanError('El código QR escaneado no corresponde a un entrenamiento válido.')
+      return
+    }
+
+    scanHandledRef.current = true
+    setScanError('')
+    navigate(`/attendance/scan?trainingId=${parsedTrainingId}&status=${encodeURIComponent(parsedStatus)}`, { replace: true })
+  }, [navigate])
+
+  const handleScanError = useCallback((message) => {
+    setScanError(message)
+  }, [])
+
+  useEffect(() => {
+    if (!trainingId) scanHandledRef.current = false
+  }, [trainingId])
 
   const onRegister = async () => {
     setError('')
@@ -133,6 +169,12 @@ export function AttendanceScanView() {
 
         {loading ? (
           <div className="muted" style={{ marginTop: 16 }}>Cargando...</div>
+        ) : !trainingId && !error ? (
+          <div className="stack" style={{ marginTop: 16 }}>
+            {scanError ? <Alert type="error">{scanError}</Alert> : null}
+            <p className="muted">Apunta la cámara al código QR generado para el entrenamiento.</p>
+            <QrCameraScanner onDecode={handleDecode} onError={handleScanError} />
+          </div>
         ) : (
           <div className="stack" style={{ marginTop: 16 }}>
             <Input label="Entrenamiento" value={training?.name ?? ''} readOnly />
@@ -145,7 +187,7 @@ export function AttendanceScanView() {
             ) : null}
 
             <div className="toolbar" style={{ marginTop: 4 }}>
-              <div />
+              <Link to="/attendance/scan" className="btn secondary" onClick={() => setTraining(null)}>Escanear otro QR</Link>
               <Button type="button" disabled={submitting || !trainingId || !isWithinWindow} onClick={onRegister}>
                 {submitting ? 'Registrando...' : 'Registrar asistencia'}
               </Button>

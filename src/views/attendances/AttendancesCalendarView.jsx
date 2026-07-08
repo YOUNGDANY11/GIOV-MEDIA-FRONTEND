@@ -63,13 +63,13 @@ export function AttendancesCalendarView({ hideHeader = false }) {
       {!hideHeader ? (
         <Card className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/15 via-fuchsia-500/10 to-cyan-500/10" />
-          <div className="relative flex items-center justify-between gap-4">
-            <div>
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <div className="text-lg font-semibold tracking-tight">Agenda de asistencias</div>
               <div className="text-neutral-300">Selecciona un entrenamiento para generar su QR.</div>
             </div>
             <div className="flex items-center gap-3">
-              <Link to="/attendances/list" className="inline-flex items-center h-11 px-4 rounded-xl border border-white/10 bg-black/20 text-neutral-200 hover:bg-white/5">Asistencias</Link>
+              <Link to="/attendances/list" className="inline-flex items-center justify-center h-11 px-4 rounded-xl border border-white/10 bg-black/20 text-neutral-200 hover:bg-white/5 w-full sm:w-auto">Asistencias</Link>
             </div>
           </div>
         </Card>
@@ -87,25 +87,27 @@ export function AttendancesCalendarView({ hideHeader = false }) {
             {ordered.map((training) => {
               const date = toDate(training?.date)
               return (
-                <div key={training.id_training} className="flex items-center gap-4 p-3 rounded-2xl border border-white/10 bg-black/20 backdrop-blur-xl">
-                  <div className="w-20 grid place-items-center p-2 rounded-2xl bg-white/5 border border-white/10">
-                    <div className="text-lg font-extrabold">{date.day}</div>
-                    <div className="text-sm text-neutral-400">{date.month}{date.year ? ` ${date.year}` : ''}</div>
-                  </div>
+                <div key={training.id_training} className="flex flex-col gap-4 p-3 rounded-2xl border border-white/10 bg-black/20 backdrop-blur-xl sm:flex-row sm:items-center">
+                  <div className="flex items-center gap-4 min-w-0 flex-1">
+                    <div className="w-16 sm:w-20 shrink-0 grid place-items-center p-2 rounded-2xl bg-white/5 border border-white/10">
+                      <div className="text-lg font-extrabold">{date.day}</div>
+                      <div className="text-sm text-neutral-400">{date.month}{date.year ? ` ${date.year}` : ''}</div>
+                    </div>
 
-                  <div className="flex-1">
-                    <div className="font-extrabold text-base">{training?.name}</div>
-                    <div className="text-neutral-300 mt-1">{training?.description}</div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-black/20 text-sm text-neutral-200">{String(training?.time ?? '').slice(0, 5)}</span>
-                      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-black/20 text-sm text-neutral-200">{training?.location}</span>
-                      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-black/20 text-sm text-neutral-200">Entrenamiento</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-extrabold text-base break-words">{training?.name}</div>
+                      <div className="text-neutral-300 mt-1 break-words">{training?.description}</div>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-black/20 text-sm text-neutral-200">{String(training?.time ?? '').slice(0, 5)}</span>
+                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-black/20 text-sm text-neutral-200">{training?.location}</span>
+                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-black/20 text-sm text-neutral-200">Entrenamiento</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <Button variant="secondary" icon={icons.scan} onClick={() => { setSelected(training); setOpen(true) }}>QR</Button>
-                    <Link className="inline-flex items-center h-11 px-4 rounded-xl border border-white/10 bg-black/20 text-neutral-200 hover:bg-white/5" to={`/attendances/training/${training.id_training}`}>Asistencias</Link>
+                  <div className="flex items-center gap-3 sm:shrink-0">
+                    <Button variant="secondary" className="flex-1 justify-center sm:flex-none" icon={icons.scan} onClick={() => { setSelected(training); setOpen(true) }}>QR</Button>
+                    <Link className="flex-1 sm:flex-none inline-flex items-center justify-center h-11 px-4 rounded-xl border border-white/10 bg-black/20 text-neutral-200 hover:bg-white/5" to={`/attendances/training/${training.id_training}`}>Asistencias</Link>
                   </div>
                 </div>
               )

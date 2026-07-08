@@ -56,14 +56,14 @@ export function AttendancesByTrainingView() {
   return (
     <div className="flex flex-col gap-4">
       <Card>
-        <div className="flex items-center justify-between gap-4">
-          <div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <div className="text-lg font-extrabold">Asistencias por entrenamiento</div>
-            <div className="text-neutral-300">{training?.name || `Entrenamiento #${trainingId}`}</div>
+            <div className="truncate text-neutral-300">{training?.name || `Entrenamiento #${trainingId}`}</div>
           </div>
-          <div className="flex items-center gap-3">
-            <Link to="/attendances/list" className="inline-flex items-center h-11 px-4 rounded-xl border border-white/10 bg-black/20 text-neutral-200 hover:bg-white/5">Ver listado general</Link>
-            <Button variant="secondary" icon={icons.back} onClick={() => navigate(-1)}>Volver</Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <Link to="/attendances/list" className="inline-flex items-center justify-center h-11 px-4 rounded-xl border border-white/10 bg-black/20 text-neutral-200 hover:bg-white/5">Ver listado general</Link>
+            <Button variant="secondary" className="justify-center" icon={icons.back} onClick={() => navigate(-1)}>Volver</Button>
           </div>
         </div>
       </Card>

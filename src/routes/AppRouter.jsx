@@ -17,7 +17,6 @@ import { AttendancesAdminView } from '../views/attendances/AttendancesAdminView'
 import { AttendancesByTrainingView } from '../views/attendances/AttendancesByTrainingView'
 import { AttendanceScanView } from '../views/attendances/AttendanceScanView'
 import { MyAttendancesView } from '../views/attendances/MyAttendancesView'
-import { MyAttendanceFormView } from '../views/attendances/MyAttendanceFormView'
 import { WeeksListView } from '../views/weeks/WeeksListView'
 import { WeekFormView } from '../views/weeks/WeekFormView'
 import { MediaListView } from '../views/media/MediaListView'
@@ -66,7 +65,6 @@ export function AppRouter() {
         <Route path="/media/mine" element={<RoleRoute allowedRoles={[2]}><MediaMineView /></RoleRoute>} />
 
         <Route path="/my-attendances" element={<RoleRoute allowedRoles={[2]}><MyAttendancesView /></RoleRoute>} />
-        <Route path="/my-attendances/new" element={<RoleRoute allowedRoles={[2]}><MyAttendanceFormView /></RoleRoute>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
