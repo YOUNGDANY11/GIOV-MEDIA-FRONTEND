@@ -19,6 +19,7 @@ import {
   faVideo,
 } from '@fortawesome/free-solid-svg-icons'
 
+import logo from '../../assets/logo.png'
 import { useAuth } from '../../context/AuthContext'
 import { isAdmin, isAthlete } from '../../utils/roles'
 
@@ -137,8 +138,8 @@ export function AppLayout() {
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
           {/* Logo */}
           <Link to="/dashboard" className="font-semibold tracking-wide inline-flex items-center gap-2 shrink-0">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-transparent bg-clip-text bg-gradient-to-r from-neutral-100 via-neutral-100 to-neutral-300">G</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-neutral-100 via-neutral-100 to-neutral-300">G10V MEDIA</span>
+            <img src={logo} alt="G10V Media" className="h-8 w-8 lg:h-10 lg:w-10 rounded-xl object-contain" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-neutral-100 via-neutral-100 to-neutral-300">VERA FUTBOL CLUB</span>
           </Link>
 
           {/* Desktop nav */}

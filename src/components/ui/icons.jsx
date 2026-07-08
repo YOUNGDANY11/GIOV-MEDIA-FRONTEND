@@ -3,8 +3,10 @@ import {
   faArrowLeft,
   faArrowUpFromBracket,
   faCalendarDays,
+  faChartColumn,
   faClipboardCheck,
   faCopy,
+  faDatabase,
   faDumbbell,
   faEye,
   faFloppyDisk,
@@ -41,4 +43,6 @@ export const icons = {
   copy:        <FontAwesomeIcon icon={faCopy} />,
   warning:     <FontAwesomeIcon icon={faTriangleExclamation} />,
   logout:      <FontAwesomeIcon icon={faRightFromBracket} />,
+  progression: <FontAwesomeIcon icon={faDatabase} />,
+  development: <FontAwesomeIcon icon={faChartColumn} />,
 }
