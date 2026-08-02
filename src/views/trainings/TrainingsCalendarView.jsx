@@ -140,7 +140,7 @@ export function TrainingsCalendarView() {
         {loading ? (
           <div className="text-neutral-400 py-8 text-center">Cargando entrenamientos...</div>
         ) : (
-          <div style={{ height: 620 }}>
+          <div className="trainings-calendar-shell">
             <Calendar
               localizer={localizer}
               events={events}

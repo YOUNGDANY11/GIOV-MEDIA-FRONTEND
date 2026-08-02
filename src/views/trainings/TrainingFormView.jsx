@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { Alert } from '../../components/Alert'
@@ -7,10 +7,10 @@ import { PageHeader } from '../../components/layout/PageHeader'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { trainingController } from '../../controllers/trainingController'
-import { parseCoordinateInput } from '../../utils/geo'
+import { parseCoordinateInput, parseGoogleMapsCoordinates } from '../../utils/geo'
 import { icons } from '../../components/ui/icons'
 
-const blank = { name: '', description: '', date: '', time: '', location: '', lat: '', lng: '' }
+const blank = { name: '', description: '', date: '', time: '', location: '', mapLink: '', lat: '', lng: '' }
 
 export function TrainingFormView({ mode }) {
   const navigate = useNavigate()
@@ -20,6 +20,19 @@ export function TrainingFormView({ mode }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState(blank)
+
+  const derivedCoordinates = useMemo(() => {
+    const fromLink = parseGoogleMapsCoordinates(form.mapLink)
+    if (fromLink) return fromLink
+
+    const lat = parseCoordinateInput(form.lat, 'lat')
+    const lng = parseCoordinateInput(form.lng, 'lng')
+
+    if (lat === undefined && lng === undefined) return null
+    if (lat === null || lng === null) return { lat: null, lng: null }
+
+    return { lat, lng }
+  }, [form.lat, form.lng, form.mapLink])
 
   useEffect(() => {
     let alive = true
@@ -35,6 +48,7 @@ export function TrainingFormView({ mode }) {
           date: String(training?.date ?? '').slice(0, 10),
           time: String(training?.time ?? '').slice(0, 5),
           location: training?.location ?? '',
+          mapLink: training?.mapLink ?? training?.map_url ?? '',
           lat: training?.lat ?? '',
           lng: training?.lng ?? '',
         })
@@ -56,11 +70,11 @@ export function TrainingFormView({ mode }) {
     setSubmitting(true)
     setError('')
 
-    const lat = parseCoordinateInput(form.lat, 'lat')
-    const lng = parseCoordinateInput(form.lng, 'lng')
+    const lat = derivedCoordinates?.lat
+    const lng = derivedCoordinates?.lng
 
-    if (lat === null || lng === null) {
-      setError('Latitud y longitud deben estar en formato decimal o DMS válido.')
+    if (!derivedCoordinates || lat === null || lng === null) {
+      setError('Debes pegar un enlace de Google Maps válido o coordenadas en formato decimal/DMS.')
       setSubmitting(false)
       return
     }
@@ -68,6 +82,7 @@ export function TrainingFormView({ mode }) {
     try {
       const payload = {
         ...form,
+        mapLink: form.mapLink,
         ...(lat === undefined ? {} : { lat }),
         ...(lng === undefined ? {} : { lng }),
       }
@@ -109,24 +124,27 @@ export function TrainingFormView({ mode }) {
               <Input label="Hora" type="time" value={form.time} onChange={(e) => setForm((prev) => ({ ...prev, time: e.target.value }))} required />
               <Input label="Ubicación" value={form.location} onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))} required />
             </div>
+            <Input
+              label="Enlace de Google Maps"
+              type="text"
+              inputMode="url"
+              placeholder="https://www.google.com/maps/..."
+              hint="Pega un enlace o coordenadas; el sistema extraerá latitud y longitud automáticamente."
+              value={form.mapLink}
+              onChange={(e) => setForm((prev) => ({ ...prev, mapLink: e.target.value }))}
+            />
             <div className="grid-2">
               <Input
-                label="Latitud"
+                label="Latitud generada"
                 type="text"
-                inputMode="text"
-                placeholder={"4°34'52.9\"N"}
-                hint="Puedes pegar coordenadas de Google Maps o escribir decimal."
-                value={form.lat}
-                onChange={(e) => setForm((prev) => ({ ...prev, lat: e.target.value }))}
+                value={derivedCoordinates?.lat ?? ''}
+                readOnly
               />
               <Input
-                label="Longitud"
+                label="Longitud generada"
                 type="text"
-                inputMode="text"
-                placeholder={"74°07'43.2\"W"}
-                hint="Puedes pegar coordenadas de Google Maps o escribir decimal."
-                value={form.lng}
-                onChange={(e) => setForm((prev) => ({ ...prev, lng: e.target.value }))}
+                value={derivedCoordinates?.lng ?? ''}
+                readOnly
               />
             </div>
             <FormActions submitting={submitting} cancelTo="/trainings" />

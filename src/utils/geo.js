@@ -3,6 +3,41 @@ const DEFAULT_TIMEOUT_MS = 10000
 
 const normalizeCoordinateText = (value) => String(value ?? '').trim().toUpperCase().replace(/[,]+/g, '.')
 
+const parseCoordinatePair = (text) => {
+  const patterns = [
+    /@\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)/,
+    /!3D\s*([+-]?\d+(?:\.\d+)?)\s*!4D\s*([+-]?\d+(?:\.\d+)?)/,
+    /[?&](?:Q|LL|QUERY|DESTINATION|DADDR|SADDR)=\s*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)/,
+  ]
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern)
+    if (!match) continue
+
+    const lat = Number(match[1])
+    const lng = Number(match[2])
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      return { lat, lng }
+    }
+  }
+
+  return null
+}
+
+export function parseGoogleMapsCoordinates(value) {
+  const text = normalizeCoordinateText(value)
+  if (!text) return null
+
+  const pair = parseCoordinatePair(text)
+  if (!pair) return null
+
+  const { lat, lng } = pair
+  if (lat < -90 || lat > 90) return null
+  if (lng < -180 || lng > 180) return null
+
+  return pair
+}
+
 const parseDecimalCoordinate = (value, kind) => {
   const text = normalizeCoordinateText(value)
   if (!text) return null
@@ -55,6 +90,11 @@ const parseDmsCoordinate = (value, kind) => {
 export function parseCoordinateInput(value, kind) {
   const text = String(value ?? '').trim()
   if (!text) return undefined
+
+  const googleMapsCoordinates = parseGoogleMapsCoordinates(text)
+  if (googleMapsCoordinates) {
+    return kind === 'lat' ? googleMapsCoordinates.lat : googleMapsCoordinates.lng
+  }
 
   const decimalCoordinate = parseDecimalCoordinate(text, kind)
   if (decimalCoordinate !== null) return decimalCoordinate

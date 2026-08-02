@@ -277,3 +277,58 @@
   background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
 }
+
+/* Calendar dimensions ----------------------------------------------------- */
+.trainings-calendar-shell {
+  height: 620px;
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .trainings-calendar-shell {
+    height: min(78vh, 720px);
+    overflow-x: auto;
+  }
+
+  .trainings-calendar-shell .rbc-calendar {
+    width: 100%;
+    min-height: 100%;
+    min-width: 640px;
+  }
+
+  .rbc-toolbar {
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .rbc-toolbar button {
+    padding: 6px 10px;
+    font-size: 0.74rem;
+  }
+
+  .rbc-toolbar-label {
+    font-size: 0.95rem;
+  }
+
+  .rbc-agenda-table {
+    min-width: 520px;
+  }
+
+  .rbc-month-view,
+  .rbc-time-view,
+  .rbc-agenda-view {
+    min-width: 640px;
+  }
+
+  .rbc-agenda-date-cell,
+  .rbc-agenda-time-cell,
+  .rbc-agenda-event-cell {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+
+  .rbc-event {
+    font-size: 0.72rem !important;
+    padding: 2px 5px !important;
+  }
+}
