@@ -10,9 +10,11 @@ import { attendanceController } from '../../controllers/attendanceController'
 import { trainingController } from '../../controllers/trainingController'
 import { isAthlete } from '../../utils/roles'
 import { formatBogotaDateTime, parseBogotaDateTime } from '../../utils/bogotaTime'
+import { distanciaMetros, obtenerPosicion } from '../../utils/geo'
 import { QrCameraScanner } from './QrCameraScanner'
 
 const WINDOW_MINUTES = Number(import.meta.env.VITE_ATTENDANCE_WINDOW_MINUTES || 40)
+const RADIO_METROS = Number(import.meta.env.VITE_ATTENDANCE_RADIUS_METERS || 200)
 
 const toDate = (value) => String(value ?? '').slice(0, 10)
 const toTime = (value) => String(value ?? '').slice(0, 5)
@@ -31,7 +33,9 @@ export function AttendanceScanView() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [scanError, setScanError] = useState('')
+  const [geoError, setGeoError] = useState('')
   const [training, setTraining] = useState(null)
+  const [coords, setCoords] = useState(null)
   const [now, setNow] = useState(() => new Date())
   const scanHandledRef = useRef(false)
 
@@ -42,6 +46,24 @@ export function AttendanceScanView() {
   const start = useMemo(() => parseStart(training), [training])
   const end = useMemo(() => (start ? new Date(start.getTime() + WINDOW_MINUTES * 60_000) : null), [start])
   const isWithinWindow = Boolean(start && end && now >= start && now <= end)
+  const trainingLat = useMemo(() => {
+    const value = training?.lat
+    if (value === '' || value === null || value === undefined) return null
+    const number = Number(value)
+    return Number.isFinite(number) ? number : null
+  }, [training])
+  const trainingLng = useMemo(() => {
+    const value = training?.lng
+    if (value === '' || value === null || value === undefined) return null
+    const number = Number(value)
+    return Number.isFinite(number) ? number : null
+  }, [training])
+  const hasTrainingCoords = trainingLat !== null && trainingLng !== null
+  const distanceMeters = useMemo(() => {
+    if (!hasTrainingCoords || !coords) return null
+    return distanciaMetros(coords.lat, coords.lng, trainingLat, trainingLng)
+  }, [coords, hasTrainingCoords, trainingLat, trainingLng])
+  const isWithinRange = !hasTrainingCoords || (distanceMeters !== null && distanceMeters <= RADIO_METROS)
 
   useEffect(() => {
     if (!isAuthenticated) return undefined
@@ -63,6 +85,8 @@ export function AttendanceScanView() {
 
     setError('')
     setSuccess('')
+    setGeoError('')
+    setCoords(null)
     setLoading(true)
 
     try {
@@ -74,6 +98,13 @@ export function AttendanceScanView() {
       }
 
       setTraining(currentTraining)
+      try {
+        const position = await obtenerPosicion()
+        setCoords(position)
+      } catch (geoErr) {
+        setCoords(null)
+        setGeoError(geoErr?.message || 'No se pudo obtener tu ubicación.')
+      }
     } catch (err) {
       setError(err?.message || 'No se pudo cargar el QR')
     } finally {
@@ -127,6 +158,18 @@ export function AttendanceScanView() {
     setScanError(message)
   }, [])
 
+  const retryLocation = useCallback(async () => {
+    setGeoError('')
+
+    try {
+      const position = await obtenerPosicion()
+      setCoords(position)
+    } catch (geoErr) {
+      setCoords(null)
+      setGeoError(geoErr?.message || 'No se pudo obtener tu ubicación.')
+    }
+  }, [])
+
   useEffect(() => {
     if (!trainingId) scanHandledRef.current = false
   }, [trainingId])
@@ -137,7 +180,12 @@ export function AttendanceScanView() {
     setSubmitting(true)
 
     try {
-      await attendanceController.create({ id_training: Number(trainingId), status })
+      await attendanceController.create({
+        id_training: Number(trainingId),
+        status,
+        lat: coords?.lat,
+        lng: coords?.lng,
+      })
       setSuccess('Asistencia registrada con éxito.')
       setTimeout(() => {
         navigate('/my-attendances', { replace: true })
@@ -182,16 +230,33 @@ export function AttendanceScanView() {
             <Input label="Hora" value={toTime(training?.time)} readOnly />
             <Input label="Lugar" value={training?.location ?? ''} readOnly />
 
+            {geoError ? <Alert type="error">{geoError}</Alert> : null}
+
             {!isWithinWindow ? (
               <Alert type="warning">Este QR está fuera de la ventana de tiempo del entrenamiento.</Alert>
             ) : null}
 
+            {hasTrainingCoords && !isWithinRange ? (
+              <Alert type="warning">
+                Estás fuera del rango permitido. Distancia actual: {distanceMeters !== null ? `${distanceMeters.toFixed(0)} metros` : 'no disponible'}.
+                El radio permitido es de {RADIO_METROS} metros.
+              </Alert>
+            ) : null}
+
             <div className="toolbar" style={{ marginTop: 4 }}>
               <Link to="/attendance/scan" className="btn secondary" onClick={() => setTraining(null)}>Escanear otro QR</Link>
-              <Button type="button" disabled={submitting || !trainingId || !isWithinWindow} onClick={onRegister}>
+              <Button type="button" disabled={submitting || !trainingId || !isWithinWindow || !isWithinRange} onClick={onRegister}>
                 {submitting ? 'Registrando...' : 'Registrar asistencia'}
               </Button>
             </div>
+
+            {(geoError || !isWithinRange) ? (
+              <div>
+                <Button type="button" variant="secondary" onClick={retryLocation}>
+                  Reintentar ubicación
+                </Button>
+              </div>
+            ) : null}
 
             {start && end ? (
               <div className="footer-note">

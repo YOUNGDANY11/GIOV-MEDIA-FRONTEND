@@ -9,7 +9,14 @@ import { Input } from '../../components/ui/Input'
 import { trainingController } from '../../controllers/trainingController'
 import { icons } from '../../components/ui/icons'
 
-const blank = { name: '', description: '', date: '', time: '', location: '' }
+const blank = { name: '', description: '', date: '', time: '', location: '', lat: '', lng: '' }
+
+const normalizeOptionalNumber = (value) => {
+  if (value === '') return undefined
+
+  const number = Number(value)
+  return Number.isFinite(number) ? number : null
+}
 
 export function TrainingFormView({ mode }) {
   const navigate = useNavigate()
@@ -34,6 +41,8 @@ export function TrainingFormView({ mode }) {
           date: String(training?.date ?? '').slice(0, 10),
           time: String(training?.time ?? '').slice(0, 5),
           location: training?.location ?? '',
+          lat: training?.lat ?? '',
+          lng: training?.lng ?? '',
         })
       } catch (err) {
         if (alive) setError(err?.message || 'No se pudo cargar el entrenamiento')
@@ -53,11 +62,26 @@ export function TrainingFormView({ mode }) {
     setSubmitting(true)
     setError('')
 
+    const lat = normalizeOptionalNumber(form.lat)
+    const lng = normalizeOptionalNumber(form.lng)
+
+    if (lat === null || lng === null) {
+      setError('Latitud y longitud deben ser números válidos.')
+      setSubmitting(false)
+      return
+    }
+
     try {
+      const payload = {
+        ...form,
+        ...(lat === undefined ? {} : { lat }),
+        ...(lng === undefined ? {} : { lng }),
+      }
+
       if (editing) {
-        await trainingController.update(id, form)
+        await trainingController.update(id, payload)
       } else {
-        await trainingController.create(form)
+        await trainingController.create(payload)
       }
 
       navigate('/trainings', { replace: true })
@@ -90,6 +114,10 @@ export function TrainingFormView({ mode }) {
               <Input label="Fecha" type="date" value={form.date} onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))} required />
               <Input label="Hora" type="time" value={form.time} onChange={(e) => setForm((prev) => ({ ...prev, time: e.target.value }))} required />
               <Input label="Ubicación" value={form.location} onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))} required />
+            </div>
+            <div className="grid-2">
+              <Input label="Latitud" type="number" step="any" value={form.lat} onChange={(e) => setForm((prev) => ({ ...prev, lat: e.target.value }))} />
+              <Input label="Longitud" type="number" step="any" value={form.lng} onChange={(e) => setForm((prev) => ({ ...prev, lng: e.target.value }))} />
             </div>
             <FormActions submitting={submitting} cancelTo="/trainings" />
           </form>
