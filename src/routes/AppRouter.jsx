@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import { AppLayout } from '../components/layout/AppLayout'
 import { ProtectedRoute } from '../components/layout/ProtectedRoute'
@@ -23,9 +24,33 @@ import { MediaListView } from '../views/media/MediaListView'
 import { MediaMineView } from '../views/media/MediaMineView'
 import { MediaSubmitView } from '../views/media/MediaSubmitView'
 
+function RouteNormalizer() {
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const { pathname, search, hash } = location
+
+    if (pathname === '/' || !pathname.endsWith('/')) return
+
+    navigate(
+      {
+        pathname: pathname.replace(/\/+$/, ''),
+        search,
+        hash,
+      },
+      { replace: true },
+    )
+  }, [location, navigate])
+
+  return null
+}
+
 export function AppRouter() {
   return (
-    <Routes>
+    <>
+      <RouteNormalizer />
+      <Routes>
       <Route path="/login" element={<LoginView />} />
       <Route path="/register" element={<RegisterView />} />
       <Route path="/forgot-password" element={<ForgotPasswordView />} />
@@ -67,7 +92,8 @@ export function AppRouter() {
         <Route path="/my-attendances" element={<RoleRoute allowedRoles={[2]}><MyAttendancesView /></RoleRoute>} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </>
   )
 }
