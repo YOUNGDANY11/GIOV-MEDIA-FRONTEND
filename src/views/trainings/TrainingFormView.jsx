@@ -7,16 +7,10 @@ import { PageHeader } from '../../components/layout/PageHeader'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { trainingController } from '../../controllers/trainingController'
+import { parseCoordinateInput } from '../../utils/geo'
 import { icons } from '../../components/ui/icons'
 
 const blank = { name: '', description: '', date: '', time: '', location: '', lat: '', lng: '' }
-
-const normalizeOptionalNumber = (value) => {
-  if (value === '') return undefined
-
-  const number = Number(value)
-  return Number.isFinite(number) ? number : null
-}
 
 export function TrainingFormView({ mode }) {
   const navigate = useNavigate()
@@ -62,11 +56,11 @@ export function TrainingFormView({ mode }) {
     setSubmitting(true)
     setError('')
 
-    const lat = normalizeOptionalNumber(form.lat)
-    const lng = normalizeOptionalNumber(form.lng)
+    const lat = parseCoordinateInput(form.lat, 'lat')
+    const lng = parseCoordinateInput(form.lng, 'lng')
 
     if (lat === null || lng === null) {
-      setError('Latitud y longitud deben ser números válidos.')
+      setError('Latitud y longitud deben estar en formato decimal o DMS válido.')
       setSubmitting(false)
       return
     }
@@ -116,8 +110,24 @@ export function TrainingFormView({ mode }) {
               <Input label="Ubicación" value={form.location} onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))} required />
             </div>
             <div className="grid-2">
-              <Input label="Latitud" type="number" step="any" value={form.lat} onChange={(e) => setForm((prev) => ({ ...prev, lat: e.target.value }))} />
-              <Input label="Longitud" type="number" step="any" value={form.lng} onChange={(e) => setForm((prev) => ({ ...prev, lng: e.target.value }))} />
+              <Input
+                label="Latitud"
+                type="text"
+                inputMode="text"
+                placeholder={"4°34'52.9\"N"}
+                hint="Puedes pegar coordenadas de Google Maps o escribir decimal."
+                value={form.lat}
+                onChange={(e) => setForm((prev) => ({ ...prev, lat: e.target.value }))}
+              />
+              <Input
+                label="Longitud"
+                type="text"
+                inputMode="text"
+                placeholder={"74°07'43.2\"W"}
+                hint="Puedes pegar coordenadas de Google Maps o escribir decimal."
+                value={form.lng}
+                onChange={(e) => setForm((prev) => ({ ...prev, lng: e.target.value }))}
+              />
             </div>
             <FormActions submitting={submitting} cancelTo="/trainings" />
           </form>
